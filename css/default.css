@@ -1,9 +1,6 @@
 body {
-    width: 1024px;
-    height: 100%;
     margin: 0 auto;
-    font-size: 18px;
-    font-family: 'Lekton', sans-serif;
+    font-family: 'Lekton', sans-serif !important;
 }
 
 #navigation li {

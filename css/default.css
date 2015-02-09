@@ -3,35 +3,14 @@ body {
     font-family: 'Lekton', sans-serif !important;
 }
 
-#navigation li {
-  list-style: none;
-  display: inline-block;
+.navbar-header a {
+  text-decoration: none !important;
 }
 
-#navigation a {
-  display: block;
-  text-decoration: none;
-  margin: 0;
-  padding: 18px 36px 18px;
-  color: inherit;
+footer span.author {
+  float: left;
 }
 
-#navigation a:hover {
-  color: grey;
-}
-
-#navigation {
-  text-align: center;
-  width: 100%;
-  font-style: bold;
-  font-size: 45px;
-}
-
-#footer {
-  margin-top: 100px;
-  text-align: center;
-}
-
-#footer a {
-  text-decoration: none;
+footer span.credit {
+  float: right;
 }

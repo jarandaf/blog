@@ -11,7 +11,7 @@ main :: IO ()
 main = hakyll $ do
 
     -- Static files
-    match ("images/*" .||. "css/*" .||. "components/**") staticBehaviour
+    match ("images/*" .||. "css/*" .||. "js/*" .||. "components/**") staticBehaviour
 
     -- Markdown posts
     match "posts/*.md" postsBehavior

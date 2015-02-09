@@ -11,10 +11,16 @@ main :: IO ()
 main = hakyll $ do
 
     -- Static files
-    match ("images/*" .||. "css/*") staticBehaviour
+    match ("images/*" .||. "css/*" .||. "js/*" .||. "components/**") staticBehaviour
 
     -- Markdown posts
-    match "posts/*.md" markdownBehavior
+    match "posts/*.md" postsBehavior
+
+    -- About
+    match "about.md" markdownBehavior
+
+    -- Contact
+    match "contact.md" markdownBehavior
 
     -- Homepage
     match "index.html" $ do
@@ -61,6 +67,21 @@ markdownBehavior = do
     body <- getResourceBody
     identifier <- getUnderlying
     return $ renderPandoc body
-    >>= loadAndApplyTemplate "templates/post.html" postCtx
+    >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
     >>= relativizeUrls
 --------------------------------------------------------------------------------
+--
+-- Posts
+postsBehavior :: Rules ()
+postsBehavior = do
+  route $ setExtension "html"
+  compile $ do
+    body <- getResourceBody
+    identifier <- getUnderlying
+    return $ renderPandoc body
+    >>= loadAndApplyTemplate "templates/post.html" postCtx
+    >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
+    >>= relativizeUrls
+    
+
+

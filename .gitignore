@@ -1,6 +1,9 @@
+# Haskell / Hakyll
 _cache
 _site
 site
 site.hi
 *.o
 
+# Bower
+components

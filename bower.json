@@ -18,6 +18,8 @@
     "tests"
   ],
   "dependencies": {
-    "highlightjs": "~8.4.0"
+    "highlightjs": "~8.4.0",
+    "bootstrap": "~3.3.2",
+    "fontawesome": "~4.3.0"
   }
 }

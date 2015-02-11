@@ -51,7 +51,7 @@ main = hakyll $ do
   -- Tags
   tagsRules tags $ \tag pattern -> do
     let title = "Posts tagged \"" ++ tag ++ "\""
-    route idRoute
+    route $ prettyRoute 
     compile $ do 
       posts <- recentFirst =<< loadAll pattern
       let ctx = constField "title" title <>

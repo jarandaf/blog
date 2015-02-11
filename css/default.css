@@ -1,10 +1,54 @@
 body {
-    margin: 0 auto;
-    font-family: 'Lekton', sans-serif !important;
+  margin: 0 auto;
+  font-family: 'Lekton', sans-serif !important;
+}
+
+.container {
+  max-width: 820px;
+}
+
+.container a {
+  color: #0097ac;
+}
+
+nav.navbar {
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-style: none none solid none;
+}
+
+nav.navbar-default {
+  background-color: white;
+  border-color: #dfdedc;
 }
 
 .navbar-header a {
   text-decoration: none !important;
+}
+
+div#content ul.posts {
+  list-style-type: none;
+}
+
+div#content li.post-teaser {
+  margin-bottom: 30px;
+}
+
+article header .meta {
+  color: #a09b96;
+  margin-bottom: 20px;
+} 
+
+article header .meta div.tags {
+  display: inline-block;
+  font-variant: small-caps;
+  margin-left: 12px;
+  vertical-align: 1px;
+}
+
+article header .meta div.tags a {
+  color: #ff8642;
 }
 
 footer span.author {

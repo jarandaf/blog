@@ -1,11 +1,13 @@
-<div class="info">
-Posted on $date$
-$if(author)$
-  by $author$.
-$endif$
-</div>
 <div class="post">
-  $body$
+  <article>
+    <header>
+      <div class="meta">
+        Posted on $date$ $if(author)$ by $author$.$endif$ 
+        <div class="tags">$tags$</div>
+      </div>
+    </header>
+    <div>$body$</div>
+  </article>
 </div>
 <div class="discussion">
   <div id="disqus_thread"></div>

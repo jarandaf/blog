@@ -1,7 +1,18 @@
-<ul>
+<ul class="posts">
   $for(posts)$
-    <li>
-      <a href="$url$">$title$</a> - $date$
+    <li class=post-teaser>
+      <article>
+        <header>
+          <div class="meta">
+            <time>$date$</time>
+            <div class="tags">$tags$</div>
+          </div>
+        </header>
+        <div class="teaser">$teaser$</div>
+        <div class="continue-link">
+          <a href="$url$">Continue Reading &raquo;</a>
+        </div>
+      </article>
     </li>
   $endfor$
 </ul>

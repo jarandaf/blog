@@ -1,31 +1,75 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Data.Monoid ((<>), mappend)
-import           Data.Maybe (fromMaybe)
+import           Control.Applicative ((<$>))
+import           Control.Monad (forM)
+import           Data.Monoid ((<>), mappend, mconcat)
+import           Data.Maybe (fromMaybe, catMaybes)
+import           Data.List (intercalate, intersperse)
+import           Data.List.Utils
 import qualified Data.Map as M
 import           Hakyll
 import           System.FilePath.Posix (takeBaseName, takeDirectory, (</>), splitFileName)
 import           Data.ByteString.Char8 (isInfixOf, pack)
+import           Text.Blaze.Html (toHtml, toValue, (!))
+import           Text.Blaze.Html.Renderer.String (renderHtml)
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as A
 
 --------------------------------------------------------------------------------
 main :: IO ()
 main = hakyll $ do
 
+  tags <- buildTags "posts/*" (fromCapture "tags/*.html")
+
   -- Static files
   match ("images/*" .||. "css/*" .||. "js/*" .||. "components/**") staticBehaviour
 
   -- Markdown posts
-  match "posts/*.md" postsBehavior
+  match "posts/*.md" $ do 
+    route $ prettyRoute
+    compile $ do
+      body <- getResourceBody
+      identifier <- getUnderlying
+      return $ renderPandoc body
+      >>= saveSnapshot "teaser"
+      >>= loadAndApplyTemplate "templates/post.html" (postCtx $ tags)
+      >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext 
+      >>= relativizeUrls
+      >>= removeIndexHtml 
 
   -- About 
-  match "about.md" markdownBehavior
+  match "about.md" $ do 
+    route $ prettyRoute
+    compile $ do
+      body <- getResourceBody
+      identifier <- getUnderlying
+      return $ renderPandoc body
+      >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
+      >>= relativizeUrls
+      >>= removeIndexHtml
+
+  -- Tags
+  tagsRules tags $ \tag pattern -> do
+    let title = "Posts tagged \"" ++ tag ++ "\""
+    route idRoute
+    compile $ do 
+      posts <- recentFirst =<< loadAll pattern
+      let ctx = constField "title" title <>
+                listField "posts" (postCtx $ tags) (return posts) <>
+                defaultContext
+
+      makeItem ""
+        >>= loadAndApplyTemplate "templates/tag.html" ctx
+        >>= loadAndApplyTemplate "templates/boilerplate.html" ctx
+        >>= relativizeUrls  
+        >>= removeIndexHtml
 
   -- Homepage
   match "index.html" $ do
     route idRoute
     compile $ do
       posts <- recentFirst =<< loadAll "posts/*"
-      let indexCtx = listField "posts" postCtx (return posts) <>
+      let indexCtx = listField "posts" (postCtx $ tags) (return posts) <>
                      defaultContext
 
       getResourceBody
@@ -35,52 +79,27 @@ main = hakyll $ do
         >>= removeIndexHtml
 
     match "templates/*" $ compile templateCompiler
-
 --------------------------------------------------------------------------------
-postCtx :: Context String
-postCtx = dateCtx <> authorCtx <> defaultContext
+postCtx :: Tags -> Context String
+postCtx tags = dateCtx <> authorCtx <> teaserCtx <> (tagsCtx $ tags) <> defaultContext
 --------------------------------------------------------------------------------
 dateCtx :: Context String
-dateCtx = dateField "date" "%B %e, %Y" <> defaultContext
+dateCtx = dateField "date" "%B %e, %Y"
 --------------------------------------------------------------------------------
 authorCtx :: Context String
 authorCtx = field "author" $ \item -> do 
   metadata <- getMetadata (itemIdentifier item)
   return $ fromMaybe "Jordi Aranda" $ M.lookup "author" metadata
 --------------------------------------------------------------------------------
---
--- Simply copy in the right place
-staticBehaviour :: Rules ()
+teaserCtx :: Context String
+teaserCtx = teaserField "teaser" "teaser"
+--------------------------------------------------------------------------------
+tagsCtx :: Tags -> Context String
+tagsCtx tags = mapContext (\tag -> replace ", " " | " tag) (tagsField "tags" tags) 
+--------------------------------------------------------------------------------
 staticBehaviour = do
   route idRoute
   compile copyFileCompiler
---------------------------------------------------------------------------------
---
--- Markdown
-markdownBehavior :: Rules ()
-markdownBehavior = do
-  route $ prettyRoute
-  compile $ do
-    body <- getResourceBody
-    identifier <- getUnderlying
-    return $ renderPandoc body
-    >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
-    >>= relativizeUrls
-    >>= removeIndexHtml
---------------------------------------------------------------------------------
---
--- Posts
-postsBehavior :: Rules ()
-postsBehavior = do
-  route $ prettyRoute
-  compile $ do
-    body <- getResourceBody
-    identifier <- getUnderlying
-    return $ renderPandoc body
-    >>= loadAndApplyTemplate "templates/post.html" postCtx
-    >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
-    >>= relativizeUrls
-    >>= removeIndexHtml
 --------------------------------------------------------------------------------
 --
 -- Pretty routes: replace a foo/bar.md by foo/bar/index.html
@@ -103,5 +122,3 @@ removeIndexHtml item = return $ fmap (withUrls removeIndexStr) item
         (dir, "index.html") | isLocal dir -> dir
         _                                 -> url 
         where isLocal uri = not (isInfixOf "://" (pack $ uri) && isInfixOf "components" (pack $ uri))        
-
-

@@ -24,6 +24,9 @@ main = hakyll $ do
   -- Static files
   match ("images/*" .||. "css/*" .||. "js/*" .||. "components/**") staticBehaviour
 
+  -- Slides
+  match ("slides/*") staticBehaviour
+
   -- Markdown posts
   match "posts/*.md" $ do 
     route $ prettyRoute

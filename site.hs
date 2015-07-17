@@ -33,7 +33,7 @@ main = hakyll $ do
     compile $ do
       body <- getResourceBody
       identifier <- getUnderlying
-      return $ renderPandoc body
+      renderPandoc body
       >>= saveSnapshot "teaser"
       >>= loadAndApplyTemplate "templates/post.html" (postCtx $ tags)
       >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext 
@@ -46,7 +46,7 @@ main = hakyll $ do
     compile $ do
       body <- getResourceBody
       identifier <- getUnderlying
-      return $ renderPandoc body
+      renderPandoc body
       >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
       >>= relativizeUrls
       >>= removeIndexHtml

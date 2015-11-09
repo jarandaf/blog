@@ -58,3 +58,10 @@ footer span.author {
 footer span.credit {
   float: right;
 }
+
+img#me {
+  width: 100%;
+  height: auto;
+  margin-top: 10%;
+  margin-bottom: 10%;
+}

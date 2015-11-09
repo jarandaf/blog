@@ -22,7 +22,7 @@ main = hakyll $ do
   tags <- buildTags "posts/*" (fromCapture "tags/*.html")
 
   -- Static files
-  match ("images/*" .||. "css/*" .||. "js/*" .||. "components/**") staticBehaviour
+  match ("images/*" .||. "css/*" .||. "components/**") staticBehaviour
 
   -- Slides
   match ("slides/*") staticBehaviour
@@ -47,6 +47,7 @@ main = hakyll $ do
       body <- getResourceBody
       identifier <- getUnderlying
       renderPandoc body
+      >>= loadAndApplyTemplate "templates/about.html" defaultContext
       >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
       >>= relativizeUrls
       >>= removeIndexHtml

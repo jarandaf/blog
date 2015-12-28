@@ -1,13 +1,17 @@
-<div class="post">
-  <article>
-    <header>
-      <div class="meta">
-        Posted on $date$ $if(author)$ by $author$.$endif$ 
-        <div class="tags">$tags$</div>
+<div class="post row">
+  <div class="col-md-10 col-md-offset-1 col-xs-10 col-xs-offset-1">
+    <article>
+      <header>
+        <div class="meta">
+          Posted on $date$ $if(author)$ by $author$.$endif$
+          <div class="tags">$tags$</div>
+        </div>
+      </header>
+      <div>
+        $body$
       </div>
-    </header>
-    <div>$body$</div>
-  </article>
+    </article>
+  </div>
 </div>
 <div class="discussion">
   <div id="disqus_thread"></div>

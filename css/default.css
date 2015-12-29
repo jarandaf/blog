@@ -1,6 +1,7 @@
 body {
   margin: 0 auto;
   font-family: 'Lekton', sans-serif !important;
+  text-align: justify;
 }
 
 .container {
@@ -29,6 +30,7 @@ nav.navbar-default {
 
 div#content ul.posts {
   list-style-type: none;
+  -webkit-padding-start: 0px !important;
 }
 
 div#content li.post-teaser {

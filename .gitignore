@@ -1,9 +1,10 @@
 # Haskell / Hakyll
 _cache
-_site
 site
 site.hi
 *.o
+.stack-work
+.ghci
 
 # Bower
 components

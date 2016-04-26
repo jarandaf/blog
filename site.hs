@@ -28,7 +28,7 @@ main = hakyll $ do
   match ("slides/*") staticBehaviour
 
   -- Markdown posts
-  match "posts/*.md" $ do 
+  match "posts/*.md" $ do
     route $ prettyRoute
     compile $ do
       body <- getResourceBody
@@ -36,12 +36,12 @@ main = hakyll $ do
       renderPandoc body
       >>= saveSnapshot "teaser"
       >>= loadAndApplyTemplate "templates/post.html" (postCtx $ tags)
-      >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext 
+      >>= loadAndApplyTemplate "templates/boilerplate.html" defaultContext
       >>= relativizeUrls
-      >>= removeIndexHtml 
+      >>= removeIndexHtml
 
-  -- About 
-  match "about.md" $ do 
+  -- About
+  match "about.md" $ do
     route $ prettyRoute
     compile $ do
       body <- getResourceBody
@@ -55,8 +55,8 @@ main = hakyll $ do
   -- Tags
   tagsRules tags $ \tag pattern -> do
     let title = "Posts tagged \"" ++ tag ++ "\""
-    route $ prettyRoute 
-    compile $ do 
+    route $ prettyRoute
+    compile $ do
       posts <- recentFirst =<< loadAll pattern
       let ctx = constField "title" title <>
                 listField "posts" (postCtx $ tags) (return posts) <>
@@ -65,7 +65,7 @@ main = hakyll $ do
       makeItem ""
         >>= loadAndApplyTemplate "templates/tag.html" ctx
         >>= loadAndApplyTemplate "templates/boilerplate.html" ctx
-        >>= relativizeUrls  
+        >>= relativizeUrls
         >>= removeIndexHtml
 
   -- Homepage
@@ -78,7 +78,7 @@ main = hakyll $ do
 
       getResourceBody
         >>= applyAsTemplate indexCtx
-        >>= loadAndApplyTemplate "templates/boilerplate.html" indexCtx 
+        >>= loadAndApplyTemplate "templates/boilerplate.html" indexCtx
         >>= relativizeUrls
         >>= removeIndexHtml
 
@@ -91,7 +91,7 @@ dateCtx :: Context String
 dateCtx = dateField "date" "%B %e, %Y"
 --------------------------------------------------------------------------------
 authorCtx :: Context String
-authorCtx = field "author" $ \item -> do 
+authorCtx = field "author" $ \item -> do
   metadata <- getMetadata (itemIdentifier item)
   return $ fromMaybe "Jordi Aranda" $ M.lookup "author" metadata
 --------------------------------------------------------------------------------
@@ -99,7 +99,7 @@ teaserCtx :: Context String
 teaserCtx = teaserField "teaser" "teaser"
 --------------------------------------------------------------------------------
 tagsCtx :: Tags -> Context String
-tagsCtx tags = mapContext (\tag -> replace ", " " | " tag) (tagsField "tags" tags) 
+tagsCtx tags = mapContext (replace ", " " | ") (tagsField "tags" tags)
 --------------------------------------------------------------------------------
 staticBehaviour = do
   route idRoute
@@ -111,10 +111,10 @@ staticBehaviour = do
 prettyRoute :: Routes
 prettyRoute = customRoute createIndexRoute
   where
-    createIndexRoute ident = 
+    createIndexRoute ident =
       takeDirectory p </> takeBaseName p </> "index.html"
       where
-        p = toFilePath ident  
+        p = toFilePath ident
 --------------------------------------------------------------------------------
 --
 -- Replace url of the form foo/bar/index.html by foo/bar
@@ -122,7 +122,7 @@ removeIndexHtml :: Item String -> Compiler (Item String)
 removeIndexHtml item = return $ fmap (withUrls removeIndexStr) item
   where
     removeIndexStr :: String -> String
-    removeIndexStr url = case splitFileName url of 
+    removeIndexStr url = case splitFileName url of
         (dir, "index.html") | isLocal dir -> dir
-        _                                 -> url 
-        where isLocal uri = not (isInfixOf "://" (pack $ uri) && isInfixOf "components" (pack $ uri))        
+        _                                 -> url
+        where isLocal uri = not (isInfixOf "://" (pack $ uri) && isInfixOf "components" (pack $ uri))

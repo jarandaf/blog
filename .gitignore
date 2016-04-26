@@ -7,4 +7,4 @@ site.hi
 .ghci
 
 # Bower
-components
+/components

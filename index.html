@@ -44,11 +44,32 @@
       <article>
         <header>
           <div class="meta">
+            <time>June 19, 2016</time>
+            <div class="tags"><a href="./tags/haskell/">haskell</a> | <a href="./tags/combinatorics/">combinatorics</a> | <a href="./tags/combinadic%20numbers/">combinadic numbers</a> | <a href="./tags/parallel/">parallel</a></div>
+          </div>
+        </header>
+        <div class="teaser"><h1 id="parallel-combinatorics">Parallel combinatorics</h1>
+<p>As part of an algorithm, I was meant to generate the whole set of all <span class="math inline"><em>k</em> − <em>c</em><em>o</em><em>m</em><em>b</em><em>i</em><em>n</em><em>a</em><em>t</em><em>i</em><em>o</em><em>n</em><em>s</em></span> efficiently. This may seem a really simple task but it is actually a little bit tricky, specially if one wants to handle large <span class="math inline"><em>n</em>/<em>k</em></span> values. The are out-of-the-box solutions which “do the job” but actually don’t work at all for not so big numbers.</p>
+<p>Naive solutions can be implemented at once. For instance, the following would compute all <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(20, 5)</span> combinations (please, consider to grab a coffee…) :</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+
+replicateM <span class="dv">5</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">20</span>]</code></pre></div>
+</div>
+        <div class="continue-link">
+          <a href="./posts/parallel-combinatorics/">Continue Reading &raquo;</a>
+        </div>
+      </article>
+    </li>
+  
+    <li class="post-teaser">
+      <article>
+        <header>
+          <div class="meta">
             <time>December 28, 2015</time>
             <div class="tags"><a href="./tags/haskell/">haskell</a> | <a href="./tags/lazyness/">lazyness</a></div>
           </div>
         </header>
-        <div class="teaser"><h2 id="on-spines-and-non-strict-evaluation">On spines and non-strict evaluation</h2>
+        <div class="teaser"><h1 id="on-spines-and-non-strict-evaluation">On spines and non-strict evaluation</h1>
 <p>Understanding lists is a very important topic in Haskell. Let’s review the <code>[]</code> datatype definition first (defined in <code>GHC.Types</code>):</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> [] a <span class="fu">=</span> [] <span class="fu">|</span> a <span class="fu">:</span> [a]</code></pre></div>
 <p>The list type is defined as a sum type (please notice the <code>|</code> within the definition). <code>[]</code> is the type constructor for lists as well as the data constructor for the empty list (i.e. it is a nullary constructor because it takes no arguments). The second data constructor has two arguments and uses the <code>cons</code> (<code>:</code>) infix operator: a value of type <code>a</code> and a list of type <code>[a]</code>, which evaluates to <code>[a]</code>. So we can actually see lists as a recursive series of cons cells <code>a : [a]</code> terminated by the empty list <code>[]</code>.</p>
@@ -71,6 +92,13 @@
           <span class="credit">Powered by <a href="http://jaspervdj.be/hakyll/">Hakyll</a></span>
         </footer>
         <!-- Some fancy stuff -->
+        <!-- MathJax -->
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+              TeX: { equationNumbers: { autoNumber: "AMS" } }
+          });
+        </script>
+        <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <!-- jQuery -->
         <script type="text/javascript" src="./components/jquery/dist/jquery.min.js"></script>
         <!-- Bootstrap -->

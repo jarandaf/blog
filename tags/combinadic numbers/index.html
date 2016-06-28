@@ -3,18 +3,18 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>about</title>
+        <title>Posts tagged "combinadic numbers"</title>
         <!-- Theme -->
-        <link rel="stylesheet" type="text/css" href="../css/default.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/default.css" />
         <!-- Bootstrap -->
-        <link rel="stylesheet" type="text/css" href="../components/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="../../components/bootstrap/dist/css/bootstrap.min.css" />
         <!-- Hightlight.js -->
-        <link rel="stylesheet" type="text/css" href="../components/highlightjs/styles/github.css" />
+        <link rel="stylesheet" type="text/css" href="../../components/highlightjs/styles/github.css" />
         <!-- Fonts -->
         <link href="http://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet" type="text/css">
         <link href="http://fonts.googleapis.com/css?family=Lekton" rel="stylesheet" type="text/css">
         <!-- FontAwesome -->
-        <link rel="stylesheet" type="text/css" href="../components/fontawesome/css/font-awesome.min.css" />
+        <link rel="stylesheet" type="text/css" href="../../components/fontawesome/css/font-awesome.min.css" />
     </head>
     <body>
       <div class="container">
@@ -22,7 +22,7 @@
           <div class="col-md-12 col-xs-12">
             <nav class="navbar navbar-default" role="navigation">
               <div class="navbar-header">
-                <h2><a href="../">Some Lambdas and Other Machinery</a></h2>
+                <h2><a href="../../">Some Lambdas and Other Machinery</a></h2>
               </div>
               <div class="collapse navbar-collapse">
                 <ol class="nav navbar-nav navbar-right">
@@ -38,22 +38,38 @@
           <div class="col-md-12 col-xs-12">
             <div class="row">
               <div class="col-md-10 col-md-offset-1 col-xs-10 col-xs-offset-1">
-                <div style="margin-bottom: 100px;">
-  <h2 id="about">About</h2>
-<p>Hi! My name is Jordi Aranda and I was born in Olesa de Montserrat in 1989, Catalonia. Currently I am working at <a href="http://www.bbvadata.com/">BBVA Data &amp; Analytics</a>, where we build data-based products. Before that, I studied Computer Science at <a href="http://www.fib.upc.edu/en.html">FIB - Barcelona School of Informatics</a>.</p>
-<p>I am interested in a pretty wide list of topics, from functional programming to data processing and visualization, with some bits of machine learning and statistics. I like playing with data and getting insight out of it.</p>
-<p>Apart from that, in my spare time I do usually listen to music, read some books, hang out with friends, travel, learn (programming) languages and play chess.</p>
+                <ul class="posts">
+  
+    <li class="post-teaser">
+      <article>
+        <header>
+          <div class="meta">
+            <time>June 19, 2016</time>
+            <div class="tags"><a href="../../tags/haskell/">haskell</a> | <a href="../../tags/combinatorics/">combinatorics</a> | <a href="../../tags/combinadic%20numbers/">combinadic numbers</a> | <a href="../../tags/parallel/">parallel</a></div>
+          </div>
+        </header>
+        <div class="teaser"><h1 id="parallel-combinatorics">Parallel combinatorics</h1>
+<p>As part of an algorithm, I was meant to generate the whole set of all <span class="math inline"><em>k</em> − <em>c</em><em>o</em><em>m</em><em>b</em><em>i</em><em>n</em><em>a</em><em>t</em><em>i</em><em>o</em><em>n</em><em>s</em></span> efficiently. This may seem a really simple task but it is actually a little bit tricky, specially if one wants to handle large <span class="math inline"><em>n</em>/<em>k</em></span> values. The are out-of-the-box solutions which “do the job” but actually don’t work at all for not so big numbers.</p>
+<p>Naive solutions can be implemented at once. For instance, the following would compute all <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(20, 5)</span> combinations (please, consider to grab a coffee…) :</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+
+replicateM <span class="dv">5</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">20</span>]</code></pre></div>
 </div>
-<!-- <div class="col-md-6 col-xs-6"> -->
-<!--   <img style="margin: 0 auto;" id="me" src="/images/me.png" alt="Jordi Aranda"> -->
-<!-- </div> -->
+        <div class="continue-link">
+          <a href="../../posts/parallel-combinatorics/">Continue Reading &raquo;</a>
+        </div>
+      </article>
+    </li>
+  
+</ul>
+
 
               </div>
             </div>
           </div>
         </div>
         <footer>
-          <span class="author"><a href="../about">Jordi Aranda &copy;</a></span>
+          <span class="author"><a href="../../about">Jordi Aranda &copy;</a></span>
           <span class="credit">Powered by <a href="http://jaspervdj.be/hakyll/">Hakyll</a></span>
         </footer>
         <!-- Some fancy stuff -->
@@ -65,11 +81,11 @@
         </script>
         <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <!-- jQuery -->
-        <script type="text/javascript" src="../components/jquery/dist/jquery.min.js"></script>
+        <script type="text/javascript" src="../../components/jquery/dist/jquery.min.js"></script>
         <!-- Bootstrap -->
-        <script type="text/javascript" src="../components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="../../components/bootstrap/dist/js/bootstrap.min.js"></script>
         <!-- Highlight.js -->
-        <script type="text/javascript" src="../components/highlightjs/highlight.pack.js"></script>
+        <script type="text/javascript" src="../../components/highlightjs/highlight.pack.js"></script>
         <script type="text/javascript">
           hljs.initHighlightingOnLoad();
         </script>

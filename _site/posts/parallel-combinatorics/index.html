@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Parallel combinatorics</title>
+        <!-- Theme -->
+        <link rel="stylesheet" type="text/css" href="../../css/default.css" />
+        <!-- Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="../../components/bootstrap/dist/css/bootstrap.min.css" />
+        <!-- Hightlight.js -->
+        <link rel="stylesheet" type="text/css" href="../../components/highlightjs/styles/github.css" />
+        <!-- Fonts -->
+        <link href="http://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet" type="text/css">
+        <link href="http://fonts.googleapis.com/css?family=Lekton" rel="stylesheet" type="text/css">
+        <!-- FontAwesome -->
+        <link rel="stylesheet" type="text/css" href="../../components/fontawesome/css/font-awesome.min.css" />
+    </head>
+    <body>
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12 col-xs-12">
+            <nav class="navbar navbar-default" role="navigation">
+              <div class="navbar-header">
+                <h2><a href="../../">Some Lambdas and Other Machinery</a></h2>
+              </div>
+              <div class="collapse navbar-collapse">
+                <ol class="nav navbar-nav navbar-right">
+                  <li><a href="https://twitter.com/jordi_aranda"><i class="fa fa-twitter fa-2x"></i></a></li>
+                  <li><a href="https://github.com/jarandaf"><i class="fa fa-github-alt fa-2x"></i></a></li>
+                  <li><a href="https://stackoverflow.com/users/667147/jarandaf"><i class="fa fa-stack-overflow fa-2x"></i></a></li>
+                </ol>
+              </div>
+            </nav>
+          </div>
+        </div>
+        <div id="content" class="row">
+          <div class="col-md-12 col-xs-12">
+            <div class="row">
+              <div class="col-md-10 col-md-offset-1 col-xs-10 col-xs-offset-1">
+                <div class="post">
+  <article>
+    <header>
+      <div class="meta">
+        Posted on June 19, 2016  by Jordi Aranda.
+        <div class="tags"><a href="../../tags/haskell/">haskell</a> | <a href="../../tags/combinatorics/">combinatorics</a> | <a href="../../tags/combinadic%20numbers/">combinadic numbers</a> | <a href="../../tags/parallel/">parallel</a></div>
+      </div>
+    </header>
+    <div>
+      <h1 id="parallel-combinatorics">Parallel combinatorics</h1>
+<p>As part of an algorithm, I was meant to generate the whole set of all <span class="math inline"><em>k</em> − <em>c</em><em>o</em><em>m</em><em>b</em><em>i</em><em>n</em><em>a</em><em>t</em><em>i</em><em>o</em><em>n</em><em>s</em></span> efficiently. This may seem a really simple task but it is actually a little bit tricky, specially if one wants to handle large <span class="math inline"><em>n</em>/<em>k</em></span> values. The are out-of-the-box solutions which “do the job” but actually don’t work at all for not so big numbers.</p>
+<p>Naive solutions can be implemented at once. For instance, the following would compute all <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(20, 5)</span> combinations (please, consider to grab a coffee…) :</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+
+replicateM <span class="dv">5</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">20</span>]</code></pre></div>
+<!--more-->
+<p>As you may have noticed, this took a while, and it gets worse as <span class="math inline"><em>n</em></span> gets larger. If you study the shape of this function you will find out the worst case is reached when <span class="math inline"><em>k</em> = <em>n</em>/2</span>. This post is about what other options are possible to generate the whole <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(<em>n</em>, <em>k</em>)</span> set efficiently and specially, how to run them in parallel.</p>
+<h2 id="k-bit-numbers"><em>K-bit</em> numbers</h2>
+<p>The above problem can be seen as generating all binary strings with exactly <span class="math inline"><em>k</em></span> bits set, or which is equivalent, finding all k-bit numbers between the following range:</p>
+<p><br /><span class="math display">$$[2^k - 1, \sum_{i=n-k}^{n-1} 2^i]$$</span><br /></p>
+<p>With some <a href="http://stackoverflow.com/questions/506807/creating-multiple-numbers-with-certain-number-of-bits-set?lq=1">bit trickery</a> and given a number with exactly <span class="math inline"><em>k</em></span> bits set, it is easy to obtain the following number (in ascending order) with the same number of bits set:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Bits</span>
+
+<span class="ot">nextKBitNumber ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+nextKBitNumber n
+   <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">0</span>      <span class="fu">=</span> <span class="dv">0</span>
+   <span class="fu">|</span> otherwise   <span class="fu">=</span> ripple <span class="fu">.|.</span> ones
+                     <span class="kw">where</span> smallest     <span class="fu">=</span> n <span class="fu">.&amp;.</span> (<span class="fu">-</span>n)
+                           ripple       <span class="fu">=</span> n <span class="fu">+</span> smallest
+                           newSmallest  <span class="fu">=</span> ripple <span class="fu">.&amp;.</span> (<span class="fu">-</span>ripple)
+                           ones         <span class="fu">=</span> (newSmallest <span class="ot">`div`</span> smallest) <span class="ot">`shiftR`</span> <span class="dv">1</span> <span class="fu">-</span> <span class="dv">1</span></code></pre></div>
+<p>Following this idea, one might think it is easy to parallelize the task of generating the <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(<em>n</em>, <em>k</em>)</span> set as follows:</p>
+<ul>
+<li>Split the initial range into <span class="math inline"><em>m</em></span> smaller ranges <span class="math inline">(<em>m</em><sub>1</sub>, <em>m</em><sub>2</sub>),(<em>m</em><sub>2</sub>, <em>m</em><sub>3</sub>),...,(<em>m</em><sub><em>m</em> − 1</sub>, <em>m</em><sub><em>m</em></sub>)</span></li>
+<li>For each range split, keep using <code>nextKBitNumber</code> until the range end is exceeded, in parallel <span class="math inline">(1)</span></li>
+</ul>
+<p>For <span class="math inline">(1)</span> I decided to use the <a href="https://hackage.haskell.org/package/Stream-0.4.7.2/docs/Data-Stream.html"><code>Data.Stream</code></a> package, which offers some really handy methods. Streams can be seen as infinite lists and most operations are completely analogous to the definition of <code>Data.List</code>.</p>
+<p>The idea of iterating over the <code>nextKBitNumber</code> is well expressed with the <code>iterate</code> function, which produces the infinite sequence of repeated applications of <code>f</code> to <code>x</code>:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- iterate f x = [x, f x, f (f x), ...]</span>
+iterate<span class="ot"> ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> a</code></pre></div>
+<p>In this context, we can create a <code>Stream</code> of k-bit numbers pretty easily:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import qualified</span> <span class="dt">Data.Stream</span> <span class="kw">as</span> <span class="dt">S</span>
+
+<span class="co">-- | Creates a stream of k-bit numbers using the 'nextKBitNumber' generator.</span>
+<span class="ot">kBitNumbers ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">S.Stream</span> <span class="dt">Integer</span>
+kBitNumbers <span class="fu">=</span> S.iterate nextKBitNumber</code></pre></div>
+<p>When generating the range splits we have to be careful so that no numbers are repeated (<code>fixedRanges</code> takes care of that). The rest is pretty straightforward:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Debug.Trace</span>
+<span class="kw">import </span><span class="dt">Data.Digits</span>
+<span class="kw">import </span><span class="dt">Data.Char</span>
+<span class="kw">import </span><span class="dt">System.IO</span>
+
+<span class="co">-- Splits the range defined by 'n' and 'k' into 'numSplits' parts</span>
+<span class="ot">splits' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [(<span class="dt">Integer</span>, <span class="dt">Integer</span>, <span class="dt">Int</span>, <span class="dt">Int</span>)]
+splits' n k numSplits <span class="fu">=</span> fixedRanges ranges [] <span class="dv">0</span>
+  <span class="kw">where</span> s <span class="fu">=</span> start k
+        e <span class="fu">=</span> end n k
+        step <span class="fu">=</span> (e<span class="fu">-</span>s) <span class="ot">`div`</span> (min (e<span class="fu">-</span>s) (toInteger numSplits))
+        initSplits <span class="fu">=</span> [s,s<span class="fu">+</span>step<span class="fu">..</span>e]
+        ranges <span class="fu">=</span> zip initSplits (tail initSplits)
+        fixedRanges [] acc _    <span class="fu">=</span> acc
+        fixedRanges [x] acc splitId   <span class="fu">=</span> acc <span class="fu">++</span> [(fst x <span class="fu">+</span> <span class="dv">1</span>, e, k, splitId)]
+        fixedRanges (x<span class="fu">:</span>xs) acc splitId <span class="fu">=</span> <span class="kw">if</span> splitId <span class="fu">==</span> <span class="dv">0</span>
+                                            <span class="kw">then</span> fixedRanges xs (acc <span class="fu">++</span> [(fst x, snd x, k, splitId)]) (splitId <span class="fu">+</span> <span class="dv">1</span>)
+                                            <span class="kw">else</span> fixedRanges xs (acc <span class="fu">++</span> [(fst x <span class="fu">+</span> <span class="dv">1</span>, snd x, k, splitId)]) (splitId <span class="fu">+</span> <span class="dv">1</span>)
+
+<span class="co">-- Runs a split and saves generated combinations to a file</span>
+<span class="ot">runSplit' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Integer</span>, <span class="dt">Integer</span>, <span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+runSplit' n (start, end, k, splitId) <span class="fu">=</span> <span class="kw">do</span>
+  trace (<span class="st">&quot;Running split &quot;</span> <span class="fu">++</span> show start <span class="fu">++</span> <span class="st">&quot;-&quot;</span> <span class="fu">++</span> show end <span class="fu">++</span> <span class="st">&quot;(&quot;</span> <span class="fu">++</span> show splitId <span class="fu">++</span> <span class="st">&quot;)&quot;</span>) (return ())
+  fileHandler <span class="ot">&lt;-</span> openFile (<span class="st">&quot;test_&quot;</span> <span class="fu">++</span> show splitId <span class="fu">++</span> <span class="st">&quot;.txt&quot;</span>) <span class="dt">WriteMode</span>
+  hSetBuffering fileHandler <span class="fu">$</span> <span class="dt">BlockBuffering</span> (<span class="dt">Just</span> <span class="dv">1000</span>)
+  <span class="kw">let</span> allCombsInSplit <span class="fu">=</span> S.takeWhile (<span class="fu">&lt;=</span> end) <span class="fu">$</span> kBitNumbers (fixStart start)
+                          <span class="kw">where</span> fixStart s
+                                           <span class="fu">|</span> popCount s <span class="fu">==</span> k <span class="fu">=</span> s
+                                           <span class="fu">|</span> otherwise       <span class="fu">=</span> fixStart <span class="fu">$</span> s <span class="fu">+</span> <span class="dv">1</span>
+      dec2bin <span class="fu">=</span> reverse <span class="fu">.</span> map intToDigit <span class="fu">.</span> unfoldr (\x <span class="ot">-&gt;</span> <span class="kw">if</span> x <span class="fu">==</span> <span class="dv">0</span> <span class="kw">then</span> <span class="dt">Nothing</span> <span class="kw">else</span> <span class="dt">Just</span>(rem x <span class="dv">2</span>, div x <span class="dv">2</span>)) <span class="fu">.</span> fromIntegral
+   mapM_ (hPutStrLn fileHandler) <span class="fu">$</span> fmap dec2bin allCombsInSplit
+   hClose fileHandler</code></pre></div>
+<p>In order to run these <code>IO</code> actions in parallel I have used the <a href="https://www.stackage.org/lts-6.5/package/parallel-io-0.3.3"><code>parallel-io</code></a> package, which offers combinators for sequencing <code>IO</code> actions onto a thread pool. Since each thread will generate an auxiliar text file to store the corresponding combinations, such files are required to be merged later on. For this, I played a little bit with the <a href="https://www.stackage.org/lts-6.5/package/turtle-1.2.8"><code>Turtle</code></a> package, which turned out to be a joy to work with and I will be using for my shell scripts from now on (when possible, you know…):</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Environment</span>
+<span class="kw">import </span><span class="dt">Control.Monad.ParallelIO</span>
+<span class="kw">import </span><span class="dt">Turtle</span>
+<span class="kw">import qualified</span> <span class="dt">Control.Foldl</span> <span class="kw">as</span> <span class="dt">L</span>
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> <span class="kw">do</span>
+  params <span class="ot">&lt;-</span> getArgs
+  <span class="kw">let</span> n             <span class="fu">=</span> read <span class="fu">$</span> params <span class="fu">!!</span> <span class="dv">0</span>
+      k             <span class="fu">=</span> read <span class="fu">$</span> params <span class="fu">!!</span> <span class="dv">1</span>
+      numTasks      <span class="fu">=</span> read <span class="fu">$</span> params <span class="fu">!!</span> <span class="dv">2</span>
+      sps           <span class="fu">=</span> splits n k numTasks
+  parallel_ (fmap (runSplit n) sps) <span class="fu">&gt;&gt;</span> stopGlobalPool
+  <span class="co">-- Read generated .txt files and concatenate them</span>
+  files <span class="ot">&lt;-</span> fold (find (suffix <span class="st">&quot;.txt&quot;</span>) <span class="st">&quot;.&quot;</span>) L.list
+  <span class="kw">let</span> concat <span class="fu">=</span> cat <span class="fu">$</span> fmap input files
+  output (fromString <span class="fu">$</span> show n <span class="fu">++</span> <span class="st">&quot;-&quot;</span> <span class="fu">++</span> show k <span class="fu">++</span> <span class="st">&quot;.txt&quot;</span>) concat
+  <span class="co">-- Remove old .txt files</span>
+  mapM_ rm files</code></pre></div>
+<p>The main drawback of this approach is that work is actually not equally distributed over all CPU cores, since the distribution of k-bit numbers is not uniform over all the range splits. On the other hand, it is not clear how many splits should be generated for arbitrary <span class="math inline"><em>n</em></span> and <span class="math inline"><em>k</em></span> values. This was made obvious after profiling our program and visualizing the results with <a href="https://wiki.haskell.org/ThreadScope"><code>ThreadScope</code></a>:</p>
+<p><img alt="Comb(30,5) on 4-core CPU @ 2.7Ghz" style="width: 100%; height: auto;" src="../../images/30-5-nextKBitNumber.png"></p>
+<p>The above eventlog corresponds to a run for <span class="math inline"><em>n</em> = 30</span> and <span class="math inline"><em>k</em> = 5</span> on my MacBook Pro. As we can see, there is a point where only one single core is doing the work and the rest are “sleeping”; this is a clear evidence our approach for parallelization failed so we have to find some sort of alternative.</p>
+<h1 id="combinadic-numbers-to-the-rescue">Combinadic numbers to the rescue</h1>
+<p>Scratching a little bit on <a href="https://www.stackage.org/lts-6.5"><code>Stackage</code></a>/<a href="https://hackage.haskell.org/"><code>Hackage</code></a> I found an interesting package called <a href="https://www.stackage.org/lts-6.5/package/permutation-0.5.0.5"><code>permutation</code></a> which turned out to be a lifesaver. The package name is self explanatory so it provides basically what it says, permutations and combinations sorcery.</p>
+<p>In my case, I found useful the <code>choose</code> function in <code>Data.Choose</code>, which given arbitrary <span class="math inline"><em>n</em></span> and <span class="math inline"><em>k</em></span> values returns the first combination of <span class="math inline"><em>k</em></span> outcomes out of <span class="math inline"><em>n</em></span> possibilities. At the same time, given an arbitrary combination, <code>next</code> returns the next combination (if existing), in lexicographic order:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Our handy functions</span>
+<span class="ot">choose ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Choose</span>
+<span class="ot">next ::</span> <span class="dt">Choose</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Choose</span></code></pre></div>
+<p>Given arbitray <span class="math inline"><em>n</em></span> and <span class="math inline"><em>k</em></span> values we know the total number of possible combinations:</p>
+<p><br /><span class="math display">$$\binom{n}{k} = \frac{n!}{k!(n-k)!}$$</span><br /></p>
+<p>Since using factorials may overflow (not really in our case, since we are using the <code>Integer</code> type), it is a safer bet to compute all possible combinations using binomials instead:</p>
+<p><br /><span class="math display">$$\binom{n}{k} = \frac{n}{k}\binom{n-1}{k-1}$$</span><br /></p>
+<p>This formula translates automatically into Haskell:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Returns the total number of 'n' over 'k' combinations using binomials instead of factorials.</span>
+<span class="ot">combination ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+combination n <span class="dv">0</span> <span class="fu">=</span> <span class="dv">1</span>
+combination <span class="dv">0</span> k <span class="fu">=</span> <span class="dv">0</span>
+combination n k <span class="fu">=</span> combination (n<span class="fu">-</span><span class="dv">1</span>) (k<span class="fu">-</span><span class="dv">1</span>) <span class="fu">*</span> n <span class="ot">`div`</span> k</code></pre></div>
+<p>But there is still a missing bit. In order to take advantage of the <code>next</code> function we saw above and parallelize our code we should be able to find the i<span class="math inline"><em></em><sub><em>t</em><em>h</em></sub></span>-combination. <a href="https://en.wikipedia.org/wiki/Combinatorial_number_system">Combinadic numbers</a> offer a unique mapping from <span class="math inline"><em>c</em><em>o</em><em>m</em><em>b</em>(<em>n</em>, <em>k</em>)</span> but do not hold the lexicographic order property. By chance, I found this <a href="https://www.reddit.com/r/algorithms/comments/4o5a9x/unique_mapping_from_integer_to_nk_combination/">post</a> on Reddit where a user was playing around with the same stuff in Julia. The thread took some attention and <a href="https://www.reddit.com/user/thewataru">/u/thewataru</a> proposed a solution with <span class="math inline"><em>O</em>(<em>n</em>)</span> cost. I simply translated it and worked like a charm!</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- | Returns the ith-combination using combinadic numbers mapping.</span>
+<span class="ot">combinadic ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+combinadic n k i <span class="fu">=</span> iterate <span class="dv">0</span> (n<span class="fu">-</span><span class="dv">1</span>) k i []
+  <span class="kw">where</span> iterate idx n k m acc
+          <span class="fu">|</span> k <span class="fu">==</span> <span class="dv">0</span>            <span class="fu">=</span> reverse <span class="fu">$</span> fmap fromIntegral acc
+          <span class="fu">|</span> otherwise         <span class="fu">=</span> <span class="kw">if</span> m <span class="fu">&lt;</span> comb <span class="kw">then</span> iterate (idx <span class="fu">+</span> <span class="dv">1</span>) n (k <span class="fu">-</span> <span class="dv">1</span>) m (idx <span class="fu">:</span> acc)
+                                <span class="kw">else</span> iterate (idx <span class="fu">+</span> <span class="dv">1</span>) n k (m <span class="fu">-</span> comb) acc
+                                  <span class="kw">where</span> comb <span class="fu">=</span> combination (n <span class="fu">-</span> idx) (k <span class="fu">-</span> <span class="dv">1</span>)</code></pre></div>
+<p>We should be now good to go to parallelize our code following the same idea we commented for <code>kBitNumbers</code>, with the difference that now the work is well balanced across all CPU cores.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">splits ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [(<span class="dt">Integer</span>, <span class="dt">Integer</span>, <span class="dt">Int</span>, <span class="dt">Int</span>)]
+splits n k numSplits <span class="fu">=</span> fixedRanges ranges [] <span class="dv">0</span>
+  <span class="kw">where</span> s <span class="fu">=</span> <span class="dv">0</span>
+        e <span class="fu">=</span> combination (fromIntegral n) (fromIntegral k)
+        step <span class="fu">=</span> (e<span class="fu">-</span>s) <span class="ot">`div`</span> (min (e<span class="fu">-</span>s) (toInteger numSplits))
+        initSplits <span class="fu">=</span> [s,s<span class="fu">+</span>step<span class="fu">..</span>e]
+        ranges <span class="fu">=</span> zip initSplits (tail initSplits)
+        fixedRanges [] acc _            <span class="fu">=</span> acc
+        fixedRanges [x] acc splitId     <span class="fu">=</span> acc <span class="fu">++</span> [(fst x <span class="fu">+</span> <span class="dv">1</span>, e, k, splitId)]
+        fixedRanges (x<span class="fu">:</span>xs) acc splitId  <span class="fu">=</span> <span class="kw">if</span> splitId <span class="fu">==</span> <span class="dv">0</span>
+                                            <span class="kw">then</span> fixedRanges xs (acc <span class="fu">++</span> [(fst x, snd x, k, splitId)]) (splitId <span class="fu">+</span> <span class="dv">1</span>)
+                                            <span class="kw">else</span> fixedRanges xs (acc <span class="fu">++</span> [(fst x <span class="fu">+</span> <span class="dv">1</span>, snd x, k, splitId)]) (splitId <span class="fu">+</span> <span class="dv">1</span>)
+
+<span class="ot">runSplit ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Integer</span>, <span class="dt">Integer</span>, <span class="dt">Int</span>, <span class="dt">Int</span>) <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+runSplit n (start, end, k, splitId) <span class="fu">=</span> <span class="kw">do</span>
+  trace (<span class="st">&quot;Running split &quot;</span> <span class="fu">++</span> show start <span class="fu">++</span> <span class="st">&quot;-&quot;</span> <span class="fu">++</span> show end <span class="fu">++</span> <span class="st">&quot;(&quot;</span> <span class="fu">++</span> show splitId <span class="fu">++</span> <span class="st">&quot;)&quot;</span>) (return ())
+  fileHandler <span class="ot">&lt;-</span> openFile (<span class="st">&quot;test_&quot;</span> <span class="fu">++</span> show splitId <span class="fu">++</span> <span class="st">&quot;.txt&quot;</span>) <span class="dt">WriteMode</span>
+  hSetBuffering fileHandler <span class="fu">$</span> <span class="dt">BlockBuffering</span> (<span class="dt">Just</span> <span class="dv">1000</span>)
+  <span class="kw">let</span> allCombsInSplit <span class="fu">=</span> iterate startingComb (end <span class="fu">-</span> start <span class="fu">+</span> <span class="dv">1</span>) []
+                          <span class="kw">where</span> startingComb <span class="fu">=</span> <span class="dt">Just</span> <span class="fu">$</span> listChoose n (fromIntegral k) combinationIdxs
+                             combinationIdxs <span class="fu">=</span> combinadic (fromIntegral n) (fromIntegral k) start
+                             iterate _ <span class="dv">0</span> acc         <span class="fu">=</span> reverse acc
+                             iterate (<span class="dt">Just</span> c) n acc  <span class="fu">=</span> iterate (next c) (n<span class="fu">-</span><span class="dv">1</span>) (elems c <span class="fu">:</span> acc)
+                             iterate _ n acc         <span class="fu">=</span> reverse acc
+       idxsToString idxs n <span class="fu">=</span> fmap one withIdx
+         <span class="kw">where</span> withIdx     <span class="fu">=</span> zip (replicate n <span class="ch">'0'</span>) [<span class="dv">0</span><span class="fu">..</span>]
+               one x       <span class="fu">=</span> <span class="kw">if</span> snd x <span class="ot">`elem`</span> idxs <span class="kw">then</span> <span class="ch">'1'</span> <span class="kw">else</span> <span class="ch">'0'</span>
+  mapM_ (hPutStrLn fileHandler) <span class="fu">$</span> fmap (<span class="ot">`idxsToString`</span> n) allCombsInSplit
+  hClose fileHandler</code></pre></div>
+<p>The <code>main</code> remains the same, just using <code>splits</code> instead of <code>splits'</code> and <code>runSplit</code> instead of <code>runSplit'</code>. We can profile our code to see we achieved our purpose and all cores are used at their max:</p>
+<p><img alt="Comb(30,5) on 4-core CPU @ 2.7Ghz" style="width: 100%; height: auto;" src="../../images/30-5-ithComb.png"></p>
+<p>Please notice how this version performed ~4x faster.</p>
+<h1 id="conclusions">Conclusions</h1>
+<p>We could see how parallelizing code is not always as easy as one might expect. Sometimes even, we could think our code is working as expected but it is not, and this is when tools like <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/profiling.html"><code>ThreadScope</code></a> or the <a href="https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/profiling.html"><code>GHC profiler</code></a> help us to know what is really going on under the hood and spot problems.</p>
+<p>The problem was interesting enough to play with new packages I haven’t tried yet such as <a href="https://www.stackage.org/lts-6.5/package/parallel-io-0.3.3"><code>parallel-io</code></a> and <a href="https://www.stackage.org/lts-6.5/package/turtle-1.2.8"><code>Turtle</code></a> and which I will be probably using from now on.</p>
+    </div>
+  </article>
+</div>
+<div class="row">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_shortname = 'somelambdasandothermachinery'; // required: replace example with your forum shortname
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+</div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer>
+          <span class="author"><a href="../../about">Jordi Aranda &copy;</a></span>
+          <span class="credit">Powered by <a href="http://jaspervdj.be/hakyll/">Hakyll</a></span>
+        </footer>
+        <!-- Some fancy stuff -->
+        <!-- MathJax -->
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+              TeX: { equationNumbers: { autoNumber: "AMS" } }
+          });
+        </script>
+        <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <!-- jQuery -->
+        <script type="text/javascript" src="../../components/jquery/dist/jquery.min.js"></script>
+        <!-- Bootstrap -->
+        <script type="text/javascript" src="../../components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <!-- Highlight.js -->
+        <script type="text/javascript" src="../../components/highlightjs/highlight.pack.js"></script>
+        <script type="text/javascript">
+          hljs.initHighlightingOnLoad();
+        </script>
+        <!-- Google Analytics -->
+        <script type="text/javascript">
+          (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+          })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+          ga('create', 'UA-59531152-1', 'auto');
+          ga('send', 'pageview');
+        </script>
+      </div>
+    </body>
+</html>

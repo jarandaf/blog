@@ -48,7 +48,7 @@
             <div class="tags"><a href="../../tags/haskell/">haskell</a> | <a href="../../tags/lazyness/">lazyness</a></div>
           </div>
         </header>
-        <div class="teaser"><h2 id="on-spines-and-non-strict-evaluation">On spines and non-strict evaluation</h2>
+        <div class="teaser"><h1 id="on-spines-and-non-strict-evaluation">On spines and non-strict evaluation</h1>
 <p>Understanding lists is a very important topic in Haskell. Let’s review the <code>[]</code> datatype definition first (defined in <code>GHC.Types</code>):</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> [] a <span class="fu">=</span> [] <span class="fu">|</span> a <span class="fu">:</span> [a]</code></pre></div>
 <p>The list type is defined as a sum type (please notice the <code>|</code> within the definition). <code>[]</code> is the type constructor for lists as well as the data constructor for the empty list (i.e. it is a nullary constructor because it takes no arguments). The second data constructor has two arguments and uses the <code>cons</code> (<code>:</code>) infix operator: a value of type <code>a</code> and a list of type <code>[a]</code>, which evaluates to <code>[a]</code>. So we can actually see lists as a recursive series of cons cells <code>a : [a]</code> terminated by the empty list <code>[]</code>.</p>
@@ -71,6 +71,13 @@
           <span class="credit">Powered by <a href="http://jaspervdj.be/hakyll/">Hakyll</a></span>
         </footer>
         <!-- Some fancy stuff -->
+        <!-- MathJax -->
+        <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+              TeX: { equationNumbers: { autoNumber: "AMS" } }
+          });
+        </script>
+        <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <!-- jQuery -->
         <script type="text/javascript" src="../../components/jquery/dist/jquery.min.js"></script>
         <!-- Bootstrap -->

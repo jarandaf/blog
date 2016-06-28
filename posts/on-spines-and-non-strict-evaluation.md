@@ -4,7 +4,7 @@ date: 2015-12-28 17:30:00
 title: On spines and non-strict evaluation
 tags: haskell, lazyness
 ---
-## On spines and non-strict evaluation
+# On spines and non-strict evaluation
 
 Understanding lists is a very important topic in Haskell. Let's review the `[]` datatype definition first (defined in `GHC.Types`):
 
